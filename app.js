@@ -14,16 +14,22 @@ async function getNoReplyThreads() {
   return noReplyThreads;
 }
 
-setInterval(() => {
-  getNoReplyThreads().then((threads) => {
-    threads = threads.forEach(async(thread) => {
-      const replies = await readThreadReplies(thread.tid);
-      const replyContents = replies.map(reply => 'uid ' + reply.authorid + ': ' + reply.content);
+/**
+ * Find 树洞 threads
+ */
+async function getShudongThreads() {
+  const threads = await readCcqThreads({ depth: 10 });
+  const filteredThreads = threads.filter(thread => thread.subject.indexOf('树洞') !== -1);
+  return filteredThreads;
+}
 
-      console.log(`
+getShudongThreads().then((threads) => {
+  threads = threads.forEach(async(thread) => {
+    const replies = await readThreadReplies(thread);
+    const replyContents = replies.map(reply => reply.content);
+
+    console.log(`
 tid: ${thread.tid} subject: ${thread.subject}
-  ${replyContents.join('\n')}
-      `);
-    });
+${replyContents.join('\n\t')}`);
   });
-}, 2000);
+});
